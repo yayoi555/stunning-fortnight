@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1e3c72">
+    <title>🌙 月の満ち欠けゲーム</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0a1033 0%, #1e3c72 50%, #2a5298 100%);
+            margin: 0;
+            padding: 10px;
+            color: white;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .game-area {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: clamp(15px, 3vw, 30px);
+            margin: 20px 0;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        
+        .mode-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .tab {
+            padding: 15px 25px;
+            border-radius: 25px;
+            background: rgba(255,255,255,0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            font-size: clamp(0.9rem, 2.5vw, 1rem);
+            touch-action: manipulation;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .tab.active {
+            background: #ffeb3b;
+            color: #1e3c72;
+        }
+        
+        .content-row {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .moon-section, .controls-section {
+            flex: 1;
+            min-width: 280px;
+            max-width: 500px;
+        }
+        
+        .moon-container {
+            position: relative;
+            width: clamp(150px, 40vw, 200px);
+            height: clamp(150px, 40vw, 200px);
+            margin: 30px auto;
+        }
+        
+        .moon {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: #f5f5f5;
+            position: relative;
+            box-shadow: 0 0 40px rgba(245,245,245,0.6);
+            transition: all 0.5s ease;
+        }
+        
+        .shadow {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: #1e3c72;
+            transition: all 0.5s ease;
+        }
+        
+        .phase-name {
+            font-size: clamp(1.2rem, 4vw, 1.8rem);
+            font-weight: bold;
+            margin: 20px 0;
+            color: #ffeb3b;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        .solar-system {
+            background: rgba(0,0,0,0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .orbit-container {
+            position: relative;
+            width: clamp(150px, 35vw, 200px);
+            height: clamp(150px, 35vw, 200px);
+            margin: 0 auto;
+        }
+        
+        .orbit {
+            position: absolute;
+            border: 2px dashed rgba(255,255,255,0.3);
+            border-radius: 50%;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .earth {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: clamp(20px, 6vw, 30px);
+            height: clamp(20px, 6vw, 30px);
+            background: #4CAF50;
+            border-radius: 50%;
+            font-size: clamp(12px, 4vw, 20px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .moon-orbit {
+            position: absolute;
+            width: clamp(10px, 3vw, 15px);
+            height: clamp(10px, 3vw, 15px);
+            background: #f5f5f5;
+            border-radius: 50%;
+            transition: all 0.5s ease;
+        }
+        
+        .sun {
+            position: absolute;
+            top: -15px;
+            right: -15px;
+            font-size: clamp(20px, 6vw, 30px);
+        }
+        
+        .controls {
+            margin: 20px 0;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 20px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.3);
+            outline: none;
+            margin: 20px 0;
+            cursor: pointer;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #ffeb3b;
+            cursor: pointer;
+        }
+        
+        .slider::-moz-range-thumb {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #ffeb3b;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .info-panel {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        
+        .quiz-section {
+            display: none;
+        }
+        
+        .quiz-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 25px;
+            font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+            cursor: pointer;
+            margin: 8px;
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+            min-width: 140px;
+            min-height: 50px;
+        }
+        
+        .quiz-button:hover, .quiz-button:active {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+        
+        .quiz-button.correct {
+            background: #2196F3;
+        }
+        
+        .quiz-button.wrong {
+            background: #f44336;
+        }
+        
+        .score {
+            font-size: clamp(1.1rem, 3vw, 1.3rem);
+            margin: 20px 0;
+            color: #ffeb3b;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            flex: 1;
+            min-width: 80px;
+        }
+        
+        .stat-value {
+            font-size: clamp(1.2rem, 3.5vw, 1.5rem);
+            font-weight: bold;
+            color: #ffeb3b;
+        }
+        
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+        
+        .quiz-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .instruction {
+            background: rgba(255,235,59,0.2);
+            border-radius: 15px;
+            padding: 15px;
+            margin: 20px 0;
+            font-size: clamp(0.9rem, 2.2vw, 1rem);
+        }
+        
+        @media (max-width: 768px) {
+            .content-row {
+                flex-direction: column;
+            }
+            
+            .game-area {
+                margin: 10px 5px;
+                padding: 15px;
+            }
+            
+            .quiz-options {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 5px;
+            }
+            
+            .stats {
+                flex-direction: row;
+                justify-content: space-evenly;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars" id="stars"></div>
+    
+    <div class="container">
+        <h1>🌙 月の満ち欠けゲーム 🌙</h1>
+        
+        <div class="instruction">
+            📱 スマホやタブレットでも快適に遊べます！
+        </div>
+        
+        <div class="game-area">
+            <div class="mode-tabs">
+                <div class="tab active" id="observeTab">🔍 観察モード</div>
+                <div class="tab" id="quizTab">🎯 クイズモード</div>
+            </div>
+            
+            <div id="observeMode">
+                <div class="content-row">
+                    <div class="moon-section">
+                        <h2>地球から見た月</h2>
+                        <div class="moon-container">
+                            <div class="moon" id="moon">
+                                <div class="shadow" id="shadow"></div>
+                            </div>
+                        </div>
+                        <div class="phase-name" id="phaseName">新月</div>
+                        
+                        <div class="stats">
+                            <div class="stat-item">
+                                <div class="stat-value" id="dayValue">0</div>
+                                <div>日目</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="illumination">0%</div>
+                                <div>明るさ</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="controls-section">
+                        <h2>太陽・地球・月の位置</h2>
+                        <div class="solar-system">
+                            <div class="orbit-container">
+                                <div class="orbit"></div>
+                                <div class="earth">🌍</div>
+                                <div class="moon-orbit" id="moonOrbit"></div>
+                                <div class="sun">☀️</div>
+                            </div>
+                            <p>月が地球の周りを回る様子</p>
+                        </div>
+                        
+                        <div class="controls">
+                            <label for="phaseSlider">時間を進めてみよう（0-29.5日）</label>
+                            <input type="range" min="0" max="29.5" step="0.1" value="0" class="slider" id="phaseSlider">
+                        </div>
+                        
+                        <div class="info-panel">
+                            <h3>🌟 月について</h3>
+                            <p id="phaseInfo">新月：月が太陽の方向にあるため、地球からは見えません。約29.5日で月は地球を一周します。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="quizMode" class="quiz-section">
+                <h2>🎯 月の名前当てクイズ</h2>
+                <div class="score">スコア: <span id="score">0</span>点</div>
+                <div class="moon-container">
+                    <div class="moon" id="quizMoon">
+                        <div class="shadow" id="quizShadow"></div>
+                    </div>
+                </div>
+                <div id="quizArea">
+                    <button class="quiz-button" onclick="startQuiz()">クイズを始める！</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="instruction">
+            🌟 このゲームで月の不思議を発見しよう！<br>
+            質問があれば先生に聞いてね！
+        </div>
+    </div>
+
+    <script>
+        const SYNODIC_MONTH = 29.53;
+        
+        const moonPhases = [
+            { name: "新月", info: "月が太陽の方向にあるため、地球からは見えません。約29.5日で月は地球を一周します。" },
+            { name: "三日月", info: "細い三日月が見えます。夕方の西の空に見えることが多いです。" },
+            { name: "上弦の月", info: "半分の月が見えます。夕方から夜中まで見ることができます。" },
+            { name: "十三夜月", info: "満月に近い形です。夜遅くまで明るく輝いて見えます。" },
+            { name: "満月", info: "丸い満月です。太陽の光が月の表面全体を照らしているため、一晩中明るく見えます。" },
+            { name: "寝待月", info: "満月を過ぎた月です。夜遅くに昇ってくるため、寝て待つという意味があります。" },
+            { name: "下弦の月", info: "再び半分の月が見えます。夜中から朝まで見ることができます。" },
+            { name: "二十六夜月", info: "細い月が見えます。明け方の東の空に見えることが多いです。" }
+        ];
+        
+        let score = 0;
+        let currentQuiz = null;
+        
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            const starCount = window.innerWidth < 768 ? 75 : 150;
+            
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.width = star.style.height = Math.random() * 3 + 1 + 'px';
+                star.style.animationDelay = Math.random() * 3 + 's';
+                starsContainer.appendChild(star);
+            }
+        }
+        
+        function calculateMoonPhase(day) {
+            const angle = (day / SYNODIC_MONTH) * 360;
+            const illumination = (1 + Math.cos(angle * Math.PI / 180)) / 2;
+            const phaseIndex = Math.floor((angle % 360) / 45);
+            
+            return {
+                angle: angle,
+                illumination: illumination,
+                phaseIndex: phaseIndex,
+                phaseName: moonPhases[phaseIndex].name,
+                phaseInfo: moonPhases[phaseIndex].info
+            };
+        }
+        
+        function updateMoon(day, moonId = 'moon', shadowId = 'shadow') {
+            const phase = calculateMoonPhase(day);
+            const shadow = document.getElementById(shadowId);
+            const phaseName = document.getElementById('phaseName');
+            const phaseInfo = document.getElementById('phaseInfo');
+            const dayValue = document.getElementById('dayValue');
+            const illumination = document.getElementById('illumination');
+            const moonOrbit = document.getElementById('moonOrbit');
+            
+            let shadowPosition = 0;
+            let shadowWidth = 100;
+            
+            const normalizedAngle = (phase.angle % 360 + 360) % 360;
+            
+            if (normalizedAngle <= 90) {
+                shadowPosition = 100 - (normalizedAngle / 90) * 100;
+                shadowWidth = 100;
+            } else if (normalizedAngle <= 180) {
+                shadowPosition = 0;
+                shadowWidth = 100 - ((normalizedAngle - 90) / 90) * 100;
+            } else if (normalizedAngle <= 270) {
+                shadowPosition = 0;
+                shadowWidth = ((normalizedAngle - 180) / 90) * 100;
+            } else {
+                shadowPosition = ((normalizedAngle - 270) / 90) * 100;
+                shadowWidth = 100;
+            }
+            
+            shadow.style.left = shadowPosition + '%';
+            shadow.style.width = shadowWidth + '%';
+            
+            if (moonOrbit) {
+                const orbitAngle = (phase.angle - 90) * Math.PI / 180;
+                const orbitRadius = 42.5;
+                const x = 50 + orbitRadius * Math.cos(orbitAngle);
+                const y = 50 + orbitRadius * Math.sin(orbitAngle);
+                moonOrbit.style.left = x + '%';
+                moonOrbit.style.top = y + '%';
+            }
+            
+            if (phaseName) phaseName.textContent = phase.phaseName;
+            if (phaseInfo) phaseInfo.textContent = phase.phaseInfo;
+            if (dayValue) dayValue.textContent = day.toFixed(1);
+            if (illumination) illumination.textContent = Math.round(phase.illumination * 100) + '%';
+        }
+        
+        function switchMode(mode) {
+            const observeTab = document.getElementById('observeTab');
+            const quizTab = document.getElementById('quizTab');
+            const observeMode = document.getElementById('observeMode');
+            const quizMode = document.getElementById('quizMode');
+            
+            if (mode === 'observe') {
+                observeTab.classList.add('active');
+                quizTab.classList.remove('active');
+                observeMode.style.display = 'block';
+                quizMode.style.display = 'none';
+            } else {
+                observeTab.classList.remove('active');
+                quizTab.classList.add('active');
+                observeMode.style.display = 'none';
+                quizMode.style.display = 'block';
+            }
+        }
+        
+        function startQuiz() {
+            const quizArea = document.getElementById('quizArea');
+            const randomDay = Math.random() * SYNODIC_MONTH;
+            const correctPhase = calculateMoonPhase(randomDay);
+            currentQuiz = correctPhase;
+            
+            updateQuizMoon(randomDay);
+            
+            const options = [correctPhase.phaseName];
+            while (options.length < 4) {
+                const randomOption = moonPhases[Math.floor(Math.random() * moonPhases.length)].name;
+                if (!options.includes(randomOption)) {
+                    options.push(randomOption);
+                }
+            }
+            
+            options.sort(() => Math.random() - 0.5);
+            
+            quizArea.innerHTML = `
+                <h3>この月の名前は何でしょう？</h3>
+                <div class="quiz-options">
+                    ${options.map(option => 
+                        `<button class="quiz-button" onclick="checkAnswer('${option}')">${option}</button>`
+                    ).join('')}
+                </div>
+            `;
+        }
+        
+        function updateQuizMoon(day) {
+            const phase = calculateMoonPhase(day);
+            const shadow = document.getElementById('quizShadow');
+            
+            let shadowPosition = 0;
+            let shadowWidth = 100;
+            
+            const normalizedAngle = (phase.angle % 360 + 360) % 360;
+            
+            if (normalizedAngle <= 90) {
+                shadowPosition = 100 - (normalizedAngle / 90) * 100;
+                shadowWidth = 100;
+            } else if (normalizedAngle <= 180) {
+                shadowPosition = 0;
+                shadowWidth = 100 - ((normalizedAngle - 90) / 90) * 100;
+            } else if (normalizedAngle <= 270) {
+                shadowPosition = 0;
+                shadowWidth = ((normalizedAngle - 180) / 90) * 100;
+            } else {
+                shadowPosition = ((normalizedAngle - 270) / 90) * 100;
+                shadowWidth = 100;
+            }
+            
+            shadow.style.left = shadowPosition + '%';
+            shadow.style.width = shadowWidth + '%';
+        }
+        
+        function checkAnswer(answer) {
+            const buttons = document.querySelectorAll('#quizMode .quiz-button');
+            buttons.forEach(button => {
+                if (button.textContent === currentQuiz.phaseName) {
+                    button.classList.add('correct');
+                } else if (button.textContent === answer && answer !== currentQuiz.phaseName) {
+                    button.classList.add('wrong');
+                }
+                button.disabled = true;
+            });
+            
+            if (answer === currentQuiz.phaseName) {
+                score += 10;
+                document.getElementById('score').textContent = score;
+                setTimeout(() => {
+                    alert('🎉 正解です！素晴らしい！');
+                    resetQuiz();
+                }, 1000);
+            } else {
+                setTimeout(() => {
+                    alert(`😊 正解は「${currentQuiz.phaseName}」でした。また挑戦してね！`);
+                    resetQuiz();
+                }, 1000);
+            }
+        }
+        
+        function resetQuiz() {
+            const quizArea = document.getElementById('quizArea');
+            quizArea.innerHTML = '<button class="quiz-button" onclick="startQuiz()">次の問題に挑戦！</button>';
+        }
+        
+        document.getElementById('phaseSlider').addEventListener('input', function(e) {
+            updateMoon(parseFloat(e.target.value));
+        });
+        
+        document.getElementById('observeTab').addEventListener('click', () => switchMode('observe'));
+        document.getElementById('quizTab').addEventListener('click', () => switchMode('quiz'));
+        
+        window.addEventListener('resize', function() {
+            const starsContainer = document.getElementById('stars');
+            starsContainer.innerHTML = '';
+            createStars();
+        });
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            createStars();
+            updateMoon(0);
+        });
+    </script>
+</body>
+</html>
